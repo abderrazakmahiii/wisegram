@@ -1,8 +1,9 @@
 import React from 'react';
 import {AiOutlineShoppingCart} from 'react-icons/ai'
 import {RiMenu3Fill} from 'react-icons/ri'
+import { toggleSideBar } from './sidebar';
 
-const menu = [
+export const menu = [
     {name:'Categories', link:'#'},
     {name:'Trending', link:'#'},
     {name:'Contact', link:'#'}
@@ -24,7 +25,7 @@ function Navbar() {
                 Cart<AiOutlineShoppingCart className='icon' />
                 <span>1</span>
             </div>
-            <RiMenu3Fill id='dropdownmenu'/>
+            <RiMenu3Fill id='dropdownmenu' onClick={toggleSideBar}/>
             </div>
         </div>
     )
