@@ -1,5 +1,6 @@
 import React from 'react';
 import {AiOutlineShoppingCart} from 'react-icons/ai'
+import {RiMenu3Fill} from 'react-icons/ri'
 
 const menu = [
     {name:'Categories', link:'#'},
@@ -18,8 +19,12 @@ function Navbar() {
                     ))
                 }
             </div>
+            <div className="right">
             <div className="cart">
                 Cart<AiOutlineShoppingCart className='icon' />
+                <span>1</span>
+            </div>
+            <RiMenu3Fill id='dropdownmenu'/>
             </div>
         </div>
     )
