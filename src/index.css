@@ -21,17 +21,17 @@ body {
   border-bottom: 1px solid rgb(219, 219, 219);
 }
 
-#logo {
+.logo {
   text-decoration: none;
   font-family: 'Cookie', cursive;
   color: black;
   font-size: 35px;
 }
 
-.menu a {
+.menu a, .two a {
   text-decoration: none;
   color: black;
-  margin: auto 10px;
+  margin: 5px 10px;
 }
 
 .cart {
@@ -112,6 +112,60 @@ body {
   margin-right: -100%;
 }
 
+.top, .bottomf{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
+  margin: 5%;
+}
+
+.email {
+  width: 70%;
+  margin: 0 15%;
+  text-align: center;
+}
+
+.email input {
+  width: 70%;
+  margin: auto;
+  height: 30px;
+  border-radius: .2rem;
+  font-family: 'Montserrat';
+  outline: none;
+}
+
+.email button {
+  background-color: transparent;
+  font-family: 'Montserrat';
+  height: 35px;
+  width: 100px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+.one {
+  display: flex;
+  flex-direction: column;
+}
+
+.sm {
+  margin-top: 20px;
+}
+
+.sm i{
+  padding: 7px;
+  border-radius: .5rem;
+  display: inline-flex;
+  border: 1px solid rgb(219, 219, 219);
+  font-size: 20px;
+  margin: 5px;
+}
+
+.two {
+  display: flex;
+  flex-direction: column;
+}
+
 @media (max-width: 900px) {
   .menu {
     display: none;
@@ -124,4 +178,19 @@ body {
   #sidebar {
     display: block;
   }
+
+  .email {
+    width: 90%;
+    margin: auto;
+  }
+
+  .top, .bottomf {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .sm {
+    margin-bottom: 30px;
+  }
+
 }

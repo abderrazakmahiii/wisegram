@@ -12,7 +12,7 @@ export const menu = [
 function Navbar() {
     return(
         <div id='navbar'>
-            <a href='#' id='logo'>Wisegram</a>
+            <a href='#' className='logo'>Wisegram</a>
             <div className='menu'>
                 {
                     menu.map((element, index)=>(
