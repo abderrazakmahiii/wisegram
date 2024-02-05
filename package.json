@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "husky": "^4.3.8"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
   }
 }
