@@ -93,6 +93,71 @@ app.delete('/api/users/:userId/cart/:productId', async (req, res) => {
   client.close();
 });
 
+// MongoDB connection
+mongoose.connect("mongodb://localhost:27017/users", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Error connecting to MongoDB:", err));
+
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+});
+
+const User = mongoose.model("User", userSchema);
+
+app.post("/api/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+
+    if (validPassword) {
+      // Log in user (e.g., generate a token)
+      return res.json({ success: true });
+    } else {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(404).json({ error: "Internal server error" });
+  }
+});
+
+app.post('/api/signup', async (req, res) => {
+  try {
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(404).json({ error: "Internal server error" });
+  }
+
+  // User update route
+app.post('/api/update-user', middleware.isAuthenticated, async (req, res) => {
+  const { name, birthdate, phone, email, password } = req.body;
+  try {
+    const user = await User.findByIdAndUpdate(req.user.id, {
+      name,
+      birthdate,
+      phone,
+      email,
+      password: password ? await bcrypt.hash(password, 10) : user.password,
+    }, { new: true });
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(8000, () => {
     console.log('Server is listening on port 8000');
 });

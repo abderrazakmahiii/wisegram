@@ -13,7 +13,7 @@ fetch(endpoint)
       price: product.price,
       description: product.description,
       imageUrl: product.thumbnail,
-      averageRating: product.rating, // Check if rating exists and handle accordingly
+      averageRating: product.rating,
     }));
 
     fs.writeFile(outputFile, JSON.stringify(products, null, 2), err => {
