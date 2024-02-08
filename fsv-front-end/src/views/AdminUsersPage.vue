@@ -70,6 +70,66 @@
   };
   </script>
   
-  <style scoped></style>
+  <style scoped>
+.admin-users {
+  padding: 1.5rem;
+  max-width: 960px;
+  margin: 0 auto; 
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: #fff; 
+  font-weight: bold;
+  transition: all 0.2s ease-in-out; 
+}
+
+button:hover {
+  background-color: #0062cc;
+}
+
+table.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th,
+tbody td {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+thead th {
+  background-color: #f8f8f8;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+@media only screen and (max-width: 768px) {
+  .admin-users {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  table.users-table {
+    font-size: 0.9rem;
+  }
+}
+</style>
 
   

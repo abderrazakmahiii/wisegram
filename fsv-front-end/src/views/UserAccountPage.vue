@@ -1,75 +1,87 @@
 <template>
-    <div class="user-account-page">
-      <h1>Hello, {{ user?.name }}!</h1>
-  
-      <div v-if="user">
-        <p>Your email: {{ user.email }}</p>
-        <p>Your birthdate: {{ user.birthdate }}</p>
-        <p>Your phone number: {{ user.phone }}</p>
-  
-        <router-link to="/edit-account">Edit Account</router-link>
-        <button @click="showConfirm('deleteAccount')">Delete Account</button>
-      </div>
-  
-      <div v-else>
-        <p>User not found or not logged in.</p>
-        <router-link to="/sign-in">Sign In</router-link>
-      </div>
-  
-      <ConfirmationModal v-model="confirmationActive" :message="confirmationMessage" @confirm="handleConfirmation" />
+  <div class="user-account-page">
+    <h1>Hello, {{ user?.name }}!</h1>
+
+    <div v-if="user">
+      <p>Email: {{ user.email }}</p>
+      <p>Birthdate: {{ user.birthdate | date }}</p>
+      <p>Phone number: {{ user.phone | phone }}</p>
+
+      <router-link to="/edit-account">Edit Account</router-link>
+      <button @click="showConfirm('deleteAccount')">Delete Account</button>
     </div>
-  </template>
+
+    <div v-else>
+      <p>User not found or not logged in.</p>
+      <router-link to="/sign-in">Sign In</router-link>
+    </div>
+
+    <ConfirmationModal v-model="confirmationActive" :message="confirmationMessage" @confirm="handleConfirmation" />
+  </div>
+</template>
+
   
   <script>
-  import ConfirmationModal from './ConfirmationModal.vue'; // Import ConfirmationModal component
-  
-  export default {
-    components: {
-      ConfirmationModal,
+import ConfirmationModal from './ConfirmationModal.vue';
+
+export default {
+  components: {
+    ConfirmationModal,
+  },
+  data() {
+    return {
+      user: null,
+      confirmationActive: false,
+      confirmationMessage: '',
+    };
+  },
+  mounted() {
+    this.fetchUserData();
+  },
+  methods: {
+    async fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        const data = await response.json();
+        this.user = data;
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
     },
-    data() {
-      return {
-        user: null,
-        confirmationActive: false,
-        confirmationMessage: '',
-      };
+    showConfirm(action) {
+      switch (action) {
+        case 'deleteAccount':
+          this.confirmationMessage = 'Are you sure you want to delete your account?';
+          this.confirmationActive = true;
+          break;
+      }
     },
-    mounted() {
-      this.fetchUserData();
+    handleConfirmation(confirmed) {
+      if (confirmed) {
+        this.deleteAccount();
+      } else {
+        this.confirmationActive = false;
+      }
     },
-    methods: {
-      async fetchUserData() {
-      },
-      showConfirm(action) {
-        switch (action) {
-          case 'deleteAccount':
-            this.confirmationMessage = 'Are you sure you want to delete your account?';
-            this.confirmationActive = true;
-            break;
-        }
-      },
-      handleConfirmation(confirmed) {
-        if (confirmed) {
-          this.deleteAccount();
+    async deleteAccount() {
+      try {
+        const response = await fetch('/api/delete-account', {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          this.$router.push('/sign-in/:id');
         } else {
-          this.confirmationActive = false;
+          console.error("Error deleting account:", await response.text());
         }
-      },
-      async deleteAccount() {
-        try {
-          // Make API call to delete account
-          await fetch('/api/delete-account', { method: 'DELETE' });
-  
-          // Redirect to sign-in page to handle success
-          this.$router.push('/sign-in');
-        } catch (err) {
-          console.error("Error deleting account:", err);
-          // Handle error appropriately
-        }
-      },
+      } catch (err) {
+        console.error("Error deleting account:", err);
+
+      }
     },
-  };
-  </script>
+  },
+};
+</script>
   
   <style scoped>
   </style>

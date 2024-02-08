@@ -157,7 +157,38 @@ app.delete('/api/users/:userId', middleware.isAuthenticated, async (req, res) =>
   }
 });
 
+async function insertProducts(products) {
+  try {
+    const vueDb = await connectToVueDb();
+    const collection = vueDb.collection('products');
 
+    await collection.insertMany(products, { ordered: false }); // Insert with error handling
+    console.log('Products inserted successfully!');
+  } catch (err) {
+    console.error('Error inserting products:', err);
+  }
+}
+
+async function insertUsers(users) {
+  try {
+    const usersDb = await connectToUsersDb();
+    const collection = usersDb.collection('users');
+
+    await collection.insertMany(users, { ordered: false });
+    console.log('Users inserted successfully!');
+  } catch (err) {
+    console.error('Error inserting users:', err);
+  }
+}
+
+fetchProductsData()
+  .then(products => insertProducts(products))
+  .catch(err => console.error('Error fetching products:', err));
+
+fetchUserData()
+  .then(users => insertUsers(users))
+  .catch(err => console.error('Error fetching users:', err));
+  
 app.listen(8000, () => {
   console.log('Server is listening on port 8000');
 });
