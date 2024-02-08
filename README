@@ -1,2 +1,7 @@
+This application was built for development purposes.
 
+Assuming that you have all the vue, express and mongodb packages and tools, and after cloning the application, execute fetchProductData.js and fetchUsersData.js, these will create 2 json files. 
 
+Create a database with 2 tables, vue-db and users.
+Insert the generated json file from fetchProductData.js in vue-db.
+Insert the generated json file from fetchUsersData.js in users.
