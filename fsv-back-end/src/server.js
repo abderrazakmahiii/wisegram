@@ -2,96 +2,15 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { MongoClient } from 'mongodb';
 import path from 'path';
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs'; 
+import middleware from './middleware';
 
 const app = express();
 app.use(bodyParser.json());
 
+// Serve static images
 app.use('/images', express.static(path.join(__dirname, '../assets')));
-
-app.get('/api/products', async (req, res) => {
-  const client = await MongoClient.connect(
-    'mongodb://localhost:27017',
-    { useNewUrlParser: true, useUnifiedTopology: true },
-  );
-  const db = client.db('vue-db');
-  const products = await db.collection('products').find({}).toArray();
-  res.status(200).json(products);
-  client.close();
-});
-
-app.get('/api/users/:userId/cart', async (req, res) => {
-  const { userId } = req.params;
-  const client = await MongoClient.connect(
-    'mongodb://localhost:27017',
-    { useNewUrlParser: true, useUnifiedTopology: true },
-  );
-  const db = client.db('vue-db');  
-  const user = await db.collection('users').findOne({ id: userId });
-  if (!user) return res.status(404).json('Could not find user!');
-  const products = await db.collection('products').find({}).toArray();
-  const cartItemIds = user.cartItems;
-  const cartItems = cartItemIds.map(id =>
-    products.find(product => product.id === id));
-  res.status(200).json(cartItems);
-  client.close();
-});
-
-app.get('/api/products/:productId', async (req, res) => {
-    const { productId } = req.params;
-    const client = await MongoClient.connect(
-      'mongodb://localhost:27017',
-      { useNewUrlParser: true, useUnifiedTopology: true },
-    );
-    const db = client.db('vue-db');
-    const product = await db.collection('products').findOne({ id: productId });
-    if (product) {
-        res.status(200).json(product);
-    } else {
-        res.status(404).json('Could not find the product!');
-    }
-    client.close();
-});
-
-app.post('/api/users/:userId/cart', async (req, res) => {
-  const { userId } = req.params;
-  const { productId } = req.body;
-  const client = await MongoClient.connect(
-    'mongodb://localhost:27017',
-    { useNewUrlParser: true, useUnifiedTopology: true },
-  );
-  const db = client.db('vue-db');
-  await db.collection('users').updateOne({ id: userId }, {
-    $addToSet: { cartItems: productId },
-  });
-  const user = await db.collection('users').findOne({ id: userId });
-  const products = await db.collection('products').find({}).toArray();
-  const cartItemIds = user.cartItems;
-  const cartItems = cartItemIds.map(id =>
-    products.find(product => product.id === id));
-  res.status(200).json(cartItems);
-  client.close();
-});
-
-app.delete('/api/users/:userId/cart/:productId', async (req, res) => {
-  const { userId, productId } = req.params;
-  const client = await MongoClient.connect(
-    'mongodb://localhost:27017',
-    { useNewUrlParser: true, useUnifiedTopology: true },
-  );
-  const db = client.db('vue-db');
-
-  await db.collection('users').updateOne({ id: userId }, {
-    $pull: { cartItems: productId },
-  });
-  const user = await db.collection('users').findOne({ id: userId });
-  const products = await db.collection('products').find({}).toArray();
-  const cartItemIds = user.cartItems;
-  const cartItems = cartItemIds.map(id =>
-    products.find(product => product.id === id));
-
-  res.status(200).json(cartItems);
-  client.close();
-});
 
 // MongoDB connection
 mongoose.connect("mongodb://localhost:27017/users", {
@@ -101,13 +20,19 @@ mongoose.connect("mongodb://localhost:27017/users", {
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
+// User schema and model
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  name: { type: String, required: true },
+  birthdate: { type: Date },
+  phone: { type: String },
+  // ... other user fields
 });
 
 const User = mongoose.model("User", userSchema);
 
+// User login route (replace with your actual logic)
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -121,8 +46,7 @@ app.post("/api/login", async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (validPassword) {
-      // Log in user (e.g., generate a token)
-      return res.json({ success: true });
+      return res.json({ success: true, user }); // Return user object for authorization
     } else {
       return res.status(401).json({ error: "Invalid email or password" });
     }
@@ -132,15 +56,25 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// Signup route (replace with your actual logic)
 app.post('/api/signup', async (req, res) => {
   try {
+    // Hash password before saving
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const newUser = new User({
+      ...req.body, // Other user fields
+      password: hashedPassword,
+    });
+
+    await newUser.save();
     res.json({ success: true });
   } catch (err) {
     console.error("Error:", err);
     res.status(404).json({ error: "Internal server error" });
   }
+});
 
-  // User update route
+// Protected user update route
 app.post('/api/update-user', middleware.isAuthenticated, async (req, res) => {
   const { name, birthdate, phone, email, password } = req.body;
   try {
@@ -158,6 +92,73 @@ app.post('/api/update-user', middleware.isAuthenticated, async (req, res) => {
   }
 });
 
-app.listen(8000, () => {
-    console.log('Server is listening on port 8000');
+// Get all users for admin
+app.get('/api/users', middleware.isAuthenticated, async (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ error: 'Unauthorized access' });
+  }
+  const users = await User.find();
+  res.json(users);
 });
+
+// Create a new user (for admin)
+app.post('/api/users', middleware.isAuthenticated, async (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ error: 'Unauthorized access' });
+  }
+  const newUser = new User(req.body);
+  try {
+    await newUser.save();
+    res.json({ success: true, user: newUser });
+  }   catch (err) {
+    console.error('Error saving user:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.put('/api/users/:userId', middleware.isAuthenticated, async (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ error: 'Unauthorized access' });
+  }
+  const { userId } = req.params;
+  const { name, birthdate, phone, email, password } = req.body;
+  try {
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+      name,
+      birthdate,
+      phone,
+      email,
+      password: password ? await bcrypt.hash(password, 10) : undefined, 
+    }, { new: true });
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/users/:userId', middleware.isAuthenticated, async (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ error: 'Unauthorized access' });
+  }
+  const { userId } = req.params;
+  try {
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+app.listen(8000, () => {
+  console.log('Server is listening on port 8000');
+});
+

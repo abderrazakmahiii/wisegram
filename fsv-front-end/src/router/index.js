@@ -1,12 +1,14 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import CartPage from '../views/CartPage.vue'
-import ProductDetailPage from '../views/ProductDetailPage.vue'
-import ProductsPage from '../views/ProductsPage.vue'
-import NotFoundPage from '../views/NotFoundPage.vue'
-import SignInPage from '../views/SignInPage.vue'
-import SignUpPage from '../views/SignUpPage.vue'
-import AccountPage from '../views/AccountPage.vue'
-import AccessDeniedPage from '../views/AccessDeniedPage.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import CartPage from '../views/CartPage.vue';
+import ProductDetailPage from '../views/ProductDetailPage.vue';
+import ProductsPage from '../views/ProductsPage.vue';
+import NotFoundPage from '../views/NotFoundPage.vue';
+import SignInPage from '../views/SignInPage.vue';
+import SignUpPage from '../views/SignUpPage.vue';
+import AccountPage from '../views/AccountPage.vue';
+import AccessDeniedPage from '../views/AccessDeniedPage.vue';
+import AdminProductsPage from '../views/AdminProductsPage.vue';
+import AdminUsersPage from '../views/AdminUsersPage.vue';
 
 const routes = [
   {
@@ -57,19 +59,36 @@ const routes = [
     path: '/:catchAll(.*)',
     component: NotFoundPage,
   },
-]
+  {
+    path: '/admin/products',
+    name: 'AdminProducts',
+    component: AdminProductsPage,
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
+    path: '/admin/users',
+    name: 'AdminUsers',
+    component: AdminUsersPage,
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
-})
+});
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!isAuthenticated()) {
       next('/sign-in/'); // Redirect to sign-in with default ID
     } else {
-      next(); // Allow navigation if authenticated
+      const user = getUserFromStorage();
+      if (to.matched.some((record) => record.meta.requiresAdmin) && !user.isAdmin) {
+        next('/access-denied');
+      } else {
+        next();
+      }
     }
   } else if (to.path.startsWith('/sign-in/') && isAuthenticated()) {
     const userId = getCurrentUserId();
@@ -85,4 +104,4 @@ router.beforeEach((to, from, next) => {
   }
 });
 
-export default router
+export default router;

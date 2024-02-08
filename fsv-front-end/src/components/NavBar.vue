@@ -1,18 +1,36 @@
 <template>
-    <div id="nav-bar">
-        <router-link to="/products" id="products-link">
-            <h1>Wisegram</h1>
-        </router-link>
-        <router-link to="/cart" id="cart-link">
-            <button>Cart</button>
-        </router-link>
-    </div>
+  <div id="nav-bar">
+    <router-link to="/products" id="products-link">
+      <h1>Wisegram</h1>
+    </router-link>
+    <template v-if="userId === 'admin'">
+      <router-link to="/productsAdmin/" id="products-link-admin">
+        Products
+      </router-link>
+      <router-link to="/usersAdmin" id="users-link">
+        Users
+      </router-link>
+    </template>
+    <template v-else>
+      <router-link to="/cart" id="cart-link">
+        <button>Cart</button>
+      </router-link>
+    </template>
+  </div>
 </template>
 
 <script>
 export default {
-    name: 'NavBar',
-}
+  name: 'NavBar',
+  data() {
+    return {
+      userId: null,
+    };
+  },
+  mounted() {
+    this.userId = localStorage.getItem('userId');
+  },
+};
 </script>
 
 <style>
