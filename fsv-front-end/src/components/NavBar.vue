@@ -3,6 +3,7 @@
     <router-link to="/products" id="products-link">
       <h1>Wisegram</h1>
     </router-link>
+
     <template v-if="isAuthenticated && isAdmin">
       <router-link to="/productsAdmin/" id="products-link-admin">
         Products
@@ -11,12 +12,24 @@
         Users
       </router-link>
     </template>
+
     <template v-else>
       <router-link to="/cart" id="cart-link">
         <button>Cart</button>
       </router-link>
     </template>
-    <button v-if="isAuthenticated" @click="logout">Log Out</button>
+
+    <div id="account-menu">
+      <button v-if="isAuthenticated" @click="toggleAccountDropdown">
+        <span class="user-icon">...</span>
+        <span v-if="user?.displayName">{{ user.displayName }}</span>
+      </button>
+
+      <div v-if="isAuthenticated && isAccountDropdownOpen" id="account-dropdown">
+        <button @click="goToAccountPage">Account</button>
+        <button @click="logout">Logout</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -28,25 +41,39 @@ export default {
   data() {
     return {
       isAuthenticated: false,
+      isAccountDropdownOpen: false,
+      user: null,
     };
   },
   mounted() {
-    // Check authentication status on component mount
+    // Check authentication status and fetch user data on component mount
     this.isAuthenticated = authService.isAuthenticated();
+    if (this.isAuthenticated) {
+      this.fetchUserData();
+    }
   },
   methods: {
+    toggleAccountDropdown() {
+      this.isAccountDropdownOpen = !this.isAccountDropdownOpen;
+    },
+    goToAccountPage() {
+      this.isAccountDropdownOpen = false;
+      this.$router.push('/account/:id');
+    },
     logout() {
       authService.logout();
-      // Redirect to login page after logout
-      this.$router.push('/sign-up');
+      this.$router.push('/sign-up'); 
+    },
+    async fetchUserData() {
+    
+      const response = await fetch('/api/user');
+      this.user = await response.json();
     },
   },
 };
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Montserrat:wght@500&display=swap');
-
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Montserrat:wght@500&display=swap');
 
 #nav-bar {
@@ -118,5 +145,4 @@ export default {
     gap: 0.5rem;
   }
 }
-
 </style>
